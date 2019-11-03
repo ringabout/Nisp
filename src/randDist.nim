@@ -1,4 +1,4 @@
-import random
+import random, math
 
 var
   randomSeed*: int = 0
@@ -29,14 +29,19 @@ proc gauss*[T: SomeFloat](mu, sigma: T, n: int = 12): T =
     x += rand(1.0)
   x -= 6.0
   result = mu + sigma * T(x)
-  
+
+# 指数分布的随机数
+proc exponent*[T: SomeFloat](beta: T): T = 
+  var u = rand(1.0)
+  result = -beta * T(ln(u))
+
 
 when isMainModule:
   import plotly, sugar, sequtils, chroma, os
   randomize()
   var res: seq[float]
   for i in 1 .. 1000000:
-    res.add gauss[float](0, 1)
+    res.add exponent[float](1)
 
 
   var colors = @[Color(r: 0.1, g: 0.1, b: 0.9, a: 1.0)]
@@ -50,7 +55,7 @@ when isMainModule:
   # d.ys = d1.toSeq
   d.text = @["hello", "data-point", "third", "highest", "<b>bold</b>"]
 
-  var layout = Layout(title: "gauss", width: 1200, height: 400,
+  var layout = Layout(title: "exp", width: 1200, height: 400,
                       xaxis: Axis(title: "x"),
                       yaxis: Axis(title: "y"), autosize: false)
 
