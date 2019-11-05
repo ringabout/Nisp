@@ -22,31 +22,43 @@ proc uniformDistSeq*[T: SomeFloat](left: T, right: T, size: int = 8,
 
 # 正态分布的随机数
 # N(mu, sigma)
-proc gauss*[T: SomeFloat](mu, sigma: T, n: int = 12): T =
+proc gauss*[T: SomeFloat](mu, sigma: T, n: int = 12): T {.inline.} =
   var x: float
   for i in 1 .. n:
     # randomize()
     x += rand(1.0)
   x -= 6.0
-  result = mu + sigma * T(x)
+  result = mu + sigma * x
 
 # 指数分布的随机数
-proc exponent*[T: SomeFloat](beta: T): T = 
+proc exponent*[T: SomeFloat](beta: T): T {.inline.} =
   var u = rand(1.0)
-  result = -beta * T(ln(u))
+  result = -beta * ln(u)
 
+# 拉普拉斯分布的随机数
+proc laplace*[T: SomeFloat](beta: T): T {.inline.} =
+  var u = rand(1.0)
+  if u <= 0.5:
+    result = -beta * ln(1.0 - u)
+  else:
+    result = beta * ln(u)
+
+# 瑞利分布的随机数
+proc rayleigh*[T: SomeFloat](sigma: T): T {.inline.} =
+  var u = rand(1.0)
+  result = sigma * sqrt(-2.0 * ln(u))
 
 when isMainModule:
   import plotly, sugar, sequtils, chroma, os
   randomize()
   var res: seq[float]
   for i in 1 .. 1000000:
-    res.add exponent[float](1)
+    res.add rayleigh[float](0.5)
 
 
   var colors = @[Color(r: 0.1, g: 0.1, b: 0.9, a: 1.0)]
 
-  var d = Trace[float](`type`: PlotType.Histogram,nbins:5000)
+  var d = Trace[float](`type`: PlotType.Histogram, nbins: 2000)
   var size = @[1.float]
   d.marker = Marker[float](size: size, color: colors)
   d.xs = res
@@ -55,7 +67,7 @@ when isMainModule:
   # d.ys = d1.toSeq
   d.text = @["hello", "data-point", "third", "highest", "<b>bold</b>"]
 
-  var layout = Layout(title: "exp", width: 1200, height: 400,
+  var layout = Layout(title: "rayleigh", width: 1200, height: 400,
                       xaxis: Axis(title: "x"),
                       yaxis: Axis(title: "y"), autosize: false)
 
