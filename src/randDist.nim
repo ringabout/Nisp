@@ -48,13 +48,16 @@ proc rayleigh*[T: SomeFloat](sigma: T): T {.inline.} =
   var u = rand(1.0)
   result = sigma * sqrt(-2.0 * ln(u))
 
+# 对数正太分布的随机数
+proc lognorm*[T: SomeFloat](mu, sigma: T): T {.inline.} =
+  result = exp(gauss(mu, sigma))
+
 when isMainModule:
   import plotly, sugar, sequtils, chroma, os
   randomize()
   var res: seq[float]
   for i in 1 .. 1000000:
-    res.add rayleigh[float](0.5)
-
+    res.add lognorm[float](0, 0.125)
 
   var colors = @[Color(r: 0.1, g: 0.1, b: 0.9, a: 1.0)]
 
@@ -67,7 +70,7 @@ when isMainModule:
   # d.ys = d1.toSeq
   d.text = @["hello", "data-point", "third", "highest", "<b>bold</b>"]
 
-  var layout = Layout(title: "rayleigh", width: 1200, height: 400,
+  var layout = Layout(title: "lognorm", width: 1200, height: 400,
                       xaxis: Axis(title: "x"),
                       yaxis: Axis(title: "y"), autosize: false)
 
