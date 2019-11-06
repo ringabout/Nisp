@@ -2,7 +2,7 @@
 
 version       = "0.1.0"
 author        = "flywind"
-description   = "random distribution written in Nim."
+description   = "Digital Signal processing written in Nim."
 license       = "MIT"
 srcDir        = "src"
 

@@ -1,7 +1,5 @@
 import random, math, fenv
 
-
-
 var
   randomSeed*: int = 0
 
@@ -118,7 +116,6 @@ proc poisson*[T: SomeFloat](lam, s: float): T {.inline.} =
     b *= rand(1.0)
   result = T(i)
   
-
 
 
 when isMainModule:
