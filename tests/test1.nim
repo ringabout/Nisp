@@ -4,5 +4,5 @@ import math, timeit
 
 
 timeOnce("test test"):
-  echo tan(Pi / 2)
+  echo ln(0.0)
 
