@@ -52,16 +52,22 @@ proc rayleigh*[T: SomeFloat](sigma: T): T {.inline.} =
 proc lognorm*[T: SomeFloat](mu, sigma: T): T {.inline.} =
   result = exp(gauss(mu, sigma))
 
+# 柯西分布的随机数
+proc cauchy*[T: SomeFloat](alpha, beta: T): T {.inline.} = 
+  var u = rand(1.0)
+  result = alpha - beta / tan(Pi * u)
+
+
 when isMainModule:
   import plotly, sugar, sequtils, chroma, os
   randomize()
   var res: seq[float]
   for i in 1 .. 1000000:
-    res.add lognorm[float](0, 0.125)
+    res.add cauchy[float](0.0, 1.0)
 
   var colors = @[Color(r: 0.1, g: 0.1, b: 0.9, a: 1.0)]
 
-  var d = Trace[float](`type`: PlotType.Histogram, nbins: 2000)
+  var d = Trace[float](`type`: PlotType.Histogram, nbins: 20000)
   var size = @[1.float]
   d.marker = Marker[float](size: size, color: colors)
   d.xs = res
