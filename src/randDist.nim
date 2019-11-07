@@ -101,12 +101,13 @@ proc bernoulliGauss*[T: SomeFloat](p, mu, sigma: float, n: int = 12): T {.inline
   else:
     result = 0.0
 
-proc bin*[T: SomeFloat](n, p: float): T {.inline.} = 
+proc bin*[T: SomeFloat](n, p: float): T {.inline.} =
   ## binom distribution
   for i in 1 .. n:
     result += bernoulli(p)
 
-proc poisson*[T: SomeFloat](lam, s: float): T {.inline.} = 
+proc poisson*[T: SomeFloat](lam, s: float): T {.inline.} =
+  ## poisson distribution
   var
     b = 1.0
     i = 0
@@ -115,22 +116,55 @@ proc poisson*[T: SomeFloat](lam, s: float): T {.inline.} =
     i += 1
     b *= rand(1.0)
   result = T(i)
-  
+
+proc aram*[T: SomeFloat](a, b: seq[float]; mu, sigma: float; n: int): seq[T] =
+  let
+    p = a.len - 1
+    q = b.len - 1
+  var w = newSeqUninitialized[float](n)
+  result = newSeqUninitialized[float](n)
+  for i in 0 ..< n:
+    w[i] = gauss[float](mu, sigma)
+  result[0] = b[0] * w[0]
+  for k in 1 .. p:
+    var s = 0.0
+    for i in 1 .. k:
+      s += a[i] * result[k-i]
+    s = b[0] * w[k] - s
+    if q == 0:
+      result[k] = s
+      continue
+    let m = if q > k: k else: q
+    for i in 1 .. m:
+      s += b[i] * w[k-i]
+    result[k] = s
+  for k in p+1 ..< n:
+    var s = 0.0
+    for i in 1 .. p:
+      s += a[i] * result[k-i]
+    s = b[0] * w[k] - s
+    if q == 0:
+      result[k] = s
+      continue
+    for i in 1 .. q:
+      s += b[i] * w[k-i]
+    result[k] = s
 
 
-when isMainModule:
+ 
+when not isMainModule:
   import plotly, sugar, sequtils, chroma, os
-  randomize()
-  var res: seq[float]
-  for i in 1 .. 1000000:
-    res.add bernoulli[float](0.2)
+  randomize(13579)
+  var res: seq[float] = aram[float](@[1.0, 1.45, 0.6], @[1.0, -0.2, -0.1], 0.0, 0.5, 200)
+
 
   var colors = @[Color(r: 0.1, g: 0.1, b: 0.9, a: 1.0)]
 
-  var d = Trace[float](`type`: PlotType.Histogram, nbins: 2000)
+  var d = Trace[float](mode: PlotMode.LinesMarkers, `type`: PlotType.Scatter)
   var size = @[1.float]
   d.marker = Marker[float](size: size, color: colors)
-  d.xs = res
+  d.xs = toSeq(1 .. res.len).map(x => x.float)
+  d.ys = res
   # d.xs = toSeq(1 .. d1.size).map(x => x / 16000)
   # d.xs = frame2Time(d1.size, 200, 80, 16000)
   # d.ys = d1.toSeq
@@ -146,6 +180,7 @@ when isMainModule:
     createDir("./generate")
   # run with --threads:on
   p.show(filename = "generate/display.jpg")
+  
 
 
 
