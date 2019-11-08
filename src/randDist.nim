@@ -1,4 +1,4 @@
-import random, math, fenv
+import random, math, fenv, sequtils
 
 var
   randomSeed*: int = 0
@@ -117,14 +117,15 @@ proc poisson*[T: SomeFloat](lam, s: float): T {.inline.} =
     b *= rand(1.0)
   result = T(i)
 
-proc aram*[T: SomeFloat](a, b: seq[float]; mu, sigma: float; n: int): seq[T] =
+proc aram*[T: SomeFloat](a, b: seq[float]; mu, sigma: float; n: int,
+    gaussLen: int = 12): seq[T] =
   let
     p = a.len - 1
     q = b.len - 1
   var w = newSeqUninitialized[float](n)
   result = newSeqUninitialized[float](n)
   for i in 0 ..< n:
-    w[i] = gauss[float](mu, sigma)
+    w[i] = gauss[float](mu, sigma, gaussLen)
   result[0] = b[0] * w[0]
   for k in 1 .. p:
     var s = 0.0
@@ -150,13 +151,27 @@ proc aram*[T: SomeFloat](a, b: seq[float]; mu, sigma: float; n: int): seq[T] =
       s += b[i] * w[k-i]
     result[k] = s
 
+proc sinWhiteNoise*[T: SomeFloat](a, freq, phase: seq[float]; fs, snr: float;
+    n: int): seq[T] =
+  let
+    m = a.len
+    z = pow(10.0, snr / 10.0)
+    nsr = sqrt(1.0 / (2.0 * z))
+  var
+    f = freq.mapIt(2.0 * Pi * it / fs)
+    p = phase.mapIt(it * Pi / 180.0)
+  result = newSeqUninitialized[float](n)
+  for i in 0 ..< n:
+    for j in 0 ..< m:
+      result[i] += a[j] * sin(f[j] * float(i) + p[j])
+    result[i] += nsr * gauss[float](0.0, 1.0)
 
- 
-when not isMainModule:
+when isMainModule:
   import plotly, sugar, sequtils, chroma, os
-  randomize(13579)
-  var res: seq[float] = aram[float](@[1.0, 1.45, 0.6], @[1.0, -0.2, -0.1], 0.0, 0.5, 200)
-
+  randomize()
+  # var res: seq[float] = aram[float](@[1.0, 1.45, 0.6], @[1.0, -0.2, -0.1], 0.0, 0.5, 200)
+  var res: seq[float] = sinWhiteNoise[float](@[1.0, 1.0, 1.0], @[10.0, 17.0,
+      50.0], @[45.0, 10.0, 88.0], 150.0, 5.0, 200)
 
   var colors = @[Color(r: 0.1, g: 0.1, b: 0.9, a: 1.0)]
 
@@ -180,7 +195,7 @@ when not isMainModule:
     createDir("./generate")
   # run with --threads:on
   p.show(filename = "generate/display.jpg")
-  
+
 
 
 
