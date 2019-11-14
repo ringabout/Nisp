@@ -9,8 +9,8 @@ type
 
 proc size*[T](s: Tensor[T]): int 
 proc newTensor*[T](shape: varargs[int]): Tensor[T] {.noSideEffect,noInit, inline.}
-proc `[]`*[T](s: Tensor[T]; a, b: int): Tensor[T]
-proc `[]=`*[T](s: var Tensor[T]; a, b: int; val: T)
+proc `[]`*[T](s: Tensor[T]; a, b: int | BackwardsIndex): T
+proc `[]=`*[T](s: var Tensor[T]; a, b: int | BackwardsIndex; val: T)
 proc `$`*[T](s: Tensor[T]): string
 
 
@@ -44,11 +44,10 @@ proc randomTensor*(shape: varargs[int], max: int): Tensor[int] {.noinit, inline.
     for j in 0 ..< shape[1]:
       result[i, j] = int(rand(max))
 
-
-proc `[]`*[T](s: Tensor[T]; a, b: int): Tensor[T] = 
+proc `[]`*[T](s: Tensor[T]; a, b: int | BackwardsIndex): T = 
   s.data[a][b]
 
-proc `[]=`*[T](s: var Tensor[T]; a, b: int; val: T) = 
+proc `[]=`*[T](s: var Tensor[T]; a, b: int | BackwardsIndex; val: T) = 
   s.data[a][b] = val
 
 # proc `[]`*[T](s: Tensor[T], a: Slice[int], b: Slice[int])
@@ -58,4 +57,5 @@ proc `$`*[T](s: Tensor[T]): string =
 
 when isMainModule:
   var a = randomTensor[float](2, 5, max=3.0)
-  echo a
+  let b = @[@[1, 2, 3], @[1, 2, 3]]
+  echo a[^1, ^1]
